@@ -32,7 +32,7 @@ public class CraftGUI extends JFrame{
   d3 = new DefaultComboBoxModel();
   ingredient3.setModel(d3);
   ingredient3.addActionListener(selectionHandler);
-  outcome = new JLabel("Outcome", SwingConstants.CENTER);
+  outcome = new JLabel("", SwingConstants.CENTER);
   center.add(new JLabel("First Ingredient", SwingConstants.CENTER));
   center.add(new JLabel("Second Ingredient", SwingConstants.CENTER));
   center.add(new JLabel("Third Ingredient", SwingConstants.CENTER));

@@ -2,13 +2,17 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 import java.util.*;
+import java.awt.image.*;
+import java.io.*;
+import javax.imageio.*;
 
 public class ItemInfoGUI extends JFrame{
- private JPanel north, center, centerLeft, centerRight;
+ private JPanel north, center, centerLeft, centerRight, west;
  private JComboBox list;
  private DefaultComboBoxModel dl;
  private ThingyHandler thingyHandler;
  private JLabel name, description, buy, sell, info;
+ private ImagePanel picture = null;
 
  public ItemInfoGUI(){
   Container container = getContentPane();
@@ -21,6 +25,17 @@ public class ItemInfoGUI extends JFrame{
   list.addActionListener(thingyHandler);
   north.add(list);
   container.add(north, BorderLayout.NORTH);
+
+  west = new JPanel();
+  west.setPreferredSize(new Dimension(200,200));
+  west.setLayout(new BorderLayout());
+  try{
+   picture = new ImagePanel(ImageIO.read(new File("pictures/none.jpg")));
+   west.add(picture, BorderLayout.CENTER);
+  } catch (IOException e){
+   System.out.println("pictures file either missing or empty");
+  }
+  container.add(west, BorderLayout.WEST);
   
   center = new JPanel();
   //center.setLayout(new GridLayout(5,2,10,10));
@@ -156,6 +171,48 @@ public class ItemInfoGUI extends JFrame{
    }
   } catch (Exception exception){
   }
+  try {
+    int type1;
+    if (Weapon.identifier(list.getSelectedItem().toString())==-1){
+     if (Armor.identifier(list.getSelectedItem().toString())==-1){
+      if (Item.identifier(list.getSelectedItem().toString())==-1){
+       if (Helmet.identifier(list.getSelectedItem().toString())==-1){
+        if (Accessory.identifier(list.getSelectedItem().toString())==-1){
+         thingy = null;
+         System.out.println("first ingredient was unidentifiable, sorry");
+        } else {
+         thingy = new Accessory(Accessory.identifier(list.getSelectedItem().toString()));
+        }
+       } else {
+        thingy = new Helmet(Helmet.identifier(list.getSelectedItem().toString()));
+       }
+      } else {
+       thingy = new Item(Item.identifier(list.getSelectedItem().toString()));
+      }
+     } else {
+      thingy = new Armor(Armor.identifier(list.getSelectedItem().toString()));
+     }
+    } else {
+     thingy = new Weapon(Weapon.identifier(list.getSelectedItem().toString()));
+    }
+   String name = thingy.name;
+   name = "pictures/"+name+".jpg";
+   picture = new ImagePanel(ImageIO.read(new File(name)));
+  } catch (Exception exception){
+   try{
+    picture = new ImagePanel(ImageIO.read(new File("pictures/none.jpg")));
+    System.out.println("item jpg not found.");
+   } catch (IOException exc){
+    System.out.println("\"pictures\" file either missing or empty.");
+   }
+  }
+  try{
+   west.removeAll();
+   //west.setLayout(new BorderLayout());
+   west.add(picture,BorderLayout.CENTER);
+   west.revalidate();
+  } catch (Exception exception){
+  }
  }
 
  private class ThingyHandler implements ActionListener{
@@ -177,7 +234,7 @@ public class ItemInfoGUI extends JFrame{
       if (Item.identifier(list.getSelectedItem().toString())==-1){
        if (Helmet.identifier(list.getSelectedItem().toString())==-1){
         if (Accessory.identifier(list.getSelectedItem().toString())==-1){
-         System.out.println("first ingredient was unidentifiable, sorry");
+         System.out.println("item was unidentifiable, sorry");
          name.setText("");
          description.setText("");
          info.setText("");
@@ -209,6 +266,7 @@ public class ItemInfoGUI extends JFrame{
     info.setText(thingy.info);
     buy.setText(thingy.buy+" gold");
     sell.setText(thingy.sell+" gold");
+    updateItemInfo();
     pack();
    } catch (Exception exception){
    }

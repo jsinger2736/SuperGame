@@ -1,19 +1,24 @@
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
+import java.io.*;
+import javax.imageio.*;
 
 public class GameGUI extends JFrame{
  private JMenuBar menubar;
  private JMenu file, info, extra;
  private JMenuItem newgame, savegame, loadgame, exit, gameinfo, creatureinfo, iteminfo, hint;
  private JPanel north, west, innerwest, /*westgrid,*/ east, innereast, eastgrid, south, southgrid, southtop, southbot, blah;
+ public JPanel fullPicture;
  private JLabel location, charname, charlevel, charhealth, charmana/*, enemname, enemlevel, enemhealth, enemmana*/;
  private JLabel[] enemname, enemlevel, enemhealth;
  private JPanel[] westgrid;
  private JButton stats, inventory;
  private JButton[] choices;
  public JTextArea centerTA;
- private JScrollPane centerSP, enemSP;
+ private JScrollPane centerSP, enemSP, pictureSP;
+ public static ImagePanel picture;
+ private JSplitPane centerSplit;
  private MenuHandler menuHandler;
  private ButtonHandler buttonHandler;
  private StatsGUI statsGUI;
@@ -130,6 +135,17 @@ public class GameGUI extends JFrame{
   //create panel for multiple creatures
 
   //create center panel
+  try{
+   picture = new ImagePanel(ImageIO.read(new File("pictures/Village Square.jpg")));
+  } catch (IOException e){
+  }
+  fullPicture = new JPanel();
+  fullPicture.setLayout(new BorderLayout());
+  fullPicture.add(picture, BorderLayout.CENTER);
+  pictureSP = new JScrollPane(fullPicture,
+   JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+   JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+  pictureSP.setPreferredSize(new Dimension(450,203));
   centerTA = new JTextArea(6,30);
   centerTA.setEditable(false);
   centerTA.setLineWrap(true);
@@ -138,8 +154,9 @@ public class GameGUI extends JFrame{
    JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
   centerSP.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5,10,10,10), BorderFactory.createLineBorder(Color.gray)));
-  centerSP.setPreferredSize(new Dimension(450,225));
-  container.add(centerSP, BorderLayout.CENTER);
+  centerSP.setPreferredSize(new Dimension(450,125));
+  centerSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,pictureSP,centerSP);
+  container.add(centerSplit, BorderLayout.CENTER);
 
   //create south panel
   south = new JPanel();
@@ -364,6 +381,21 @@ public class GameGUI extends JFrame{
   }
   try{
    Background.player.chestGUI.updateChest();
+  } catch(Exception e){
+  }
+  try{
+   if (!Background.combat){
+    fullPicture.removeAll();
+    fullPicture.setLayout(new BorderLayout());
+    JPanel breeeh;
+    breeeh = new JPanel();
+    breeeh.setPreferredSize(new Dimension(130,200));
+    fullPicture.add(breeeh,BorderLayout.WEST);
+    fullPicture.add(picture,BorderLayout.CENTER);
+    fullPicture.revalidate();
+    pictureSP.setViewportView(fullPicture);
+   } else {
+   }
   } catch(Exception e){
   }
  }

@@ -3,7 +3,7 @@
 
 public class Npc{
  int identity = 0;
- String name = "";
+ static String name = "";
 
  public Npc(int x){
   identity = x;
@@ -23,9 +23,12 @@ public class Npc{
  }
 
  public void interact(){
+  Background.changePic(2,identity);
+  Background.game.update();
   if (identity==1){          //Chieftain
    if (Background.player.quests[1]!=0){
     Background.addQuote("Greetings "+Background.player.name+".");
+    Background.spacer();
    }
    if (Background.player.quests[1]==0){
     Background.addQuote("Hello "+Background.player.name+", I don't believe we've met before.");
@@ -51,7 +54,7 @@ public class Npc{
      Background.spacer();
      Background.addQuote("For example, one of the easiest things to do is to sharpen a Long Stick with a Jagged Rock to make a Pointed Stick.");
      Background.spacer();
-     Background.addQuote("In order to that all you need to do is to have both ingredients in your inventory, and then select them in the crafting menu, and select craft.");
+     Background.addQuote("In order to do that all you need to do is to have both ingredients in your inventory, and then select them in the crafting menu, and select craft.");
      Background.spacer();
      Background.addQuote("If an ingredient is consumed, then it is removed from your inventory, but ingredients are not always consumed. In making a Pointed Stick, the Long Stick is used up but the Jagged Rock is not.");
      Background.spacer();
@@ -455,6 +458,8 @@ public class Npc{
     Background.spacer();
    }
   }
+  Background.changePic(1,Background.player.location);
+  Background.game.update();
  }
 
  public int identifier(String name){

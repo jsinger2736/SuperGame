@@ -2,13 +2,17 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 import java.util.*;
+import java.awt.image.*;
+import java.io.*;
+import javax.imageio.*;
 
 public class BestiaryGUI extends JFrame{
- private JPanel north, center, centerLeft, centerRight;
+ private JPanel north, center, centerLeft, centerRight, west;
  private JComboBox list;
  private DefaultComboBoxModel dl;
  private CreatureHandler creatureHandler;
  private JLabel name, defeated, description, tendency, offensive, defensive, drops;
+ private ImagePanel picture = null;
 
  public BestiaryGUI(){
   Container container = getContentPane();
@@ -21,6 +25,17 @@ public class BestiaryGUI extends JFrame{
   list.addActionListener(creatureHandler);
   north.add(list);
   container.add(north, BorderLayout.NORTH);
+
+  west = new JPanel();
+  west.setPreferredSize(new Dimension(200,200));
+  west.setLayout(new BorderLayout());
+  try{
+   picture = new ImagePanel(ImageIO.read(new File("pictures/none.jpg")));
+   west.add(picture, BorderLayout.CENTER);
+  } catch (IOException e){
+   System.out.println("pictures file either missing or empty");
+  }
+  container.add(west, BorderLayout.WEST);
   
   center = new JPanel();
   //center.setLayout(new GridLayout(5,2,10,10));
@@ -89,6 +104,25 @@ public class BestiaryGUI extends JFrame{
    }
   } catch (Exception exception){
   }
+  try {
+   String name = list.getSelectedItem().toString();
+   name = "pictures/"+name+".jpg";
+   picture = new ImagePanel(ImageIO.read(new File(name)));
+  } catch (Exception exception){
+   try{
+    picture = new ImagePanel(ImageIO.read(new File("pictures/none.jpg")));
+    System.out.println("creature jpg not found.");
+   } catch (IOException exc){
+    System.out.println("\"pictures\" file either missing or empty.");
+   }
+  }
+  try{
+   west.removeAll();
+   //west.setLayout(new BorderLayout());
+   west.add(picture,BorderLayout.CENTER);
+   west.revalidate();
+  } catch (Exception exception){
+  }
  }
 
  private class CreatureHandler implements ActionListener{
@@ -109,6 +143,7 @@ public class BestiaryGUI extends JFrame{
     offensive.setText(creature.offensive);
     defensive.setText(creature.defensive);
     drops.setText(creature.drops);
+    updateBestiary();
     pack();
    } catch (Exception exception){
    }

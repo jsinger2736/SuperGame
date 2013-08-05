@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.util.*;
 import java.io.*;
+import javax.imageio.*;
+import java.awt.*;
 
 
 public class Background{
@@ -10,6 +12,7 @@ public class Background{
  static boolean go = false;
  static int result;
  static Location location = new Location();
+ static boolean combat = false;
  //static GamePlay gamePlay;
 
 
@@ -17,20 +20,25 @@ public class Background{
 
  public static void main(String[] args){
   game = new GameGUI();
-  //gamePlay = new GamePlay();
-  //loop:
   while (true){
-   //gamePlay.run();
    gamePlay();
   }
  }
 
  public static void gamePlay(){
   player = new Player("PlayerName");
+  try{
+   game.picture = new ImagePanel(ImageIO.read(new File("pictures/Welcome.jpg")));
+  } catch (IOException e){
+   try{
+    game.picture = new ImagePanel(ImageIO.read(new File("pictures/none.jpg")));
+    System.out.println("Welcome.jpg not found.");
+   } catch (IOException exc){
+    System.out.println("\"pictures\" file either missing or empty.");
+   }
+  }
   game.update();
   addText("Hello and welcome to the in-progress version of this game.");
-  /*spacer();
-  addText("Would you like to start a new game or load a saved game?");*/
   game.setButton(1,"New Game");
   game.setButton(2,"Load Game");
   String name = "";
@@ -43,7 +51,6 @@ public class Background{
     loaded = saveFiles.list();
     for (int i=0; i<loaded.length; i++){
      loaded[i]=loaded[i].substring(0,loaded[i].length()-4);
-     //System.out.println(loaded[i]);
     }
    } catch (Exception exception){
     exception.printStackTrace();
@@ -61,12 +68,6 @@ public class Background{
      System.out.println("Problem with checking if game already exists");
     }
    } else {
-    /*File saveFiles = new File("SaveFiles");
-    String[] loaded = saveFiles.list();
-    for (int i=0; i<loaded.length; i++){
-     loaded[i]=loaded[i].substring(0,loaded[i].length()-4);
-     //System.out.println(loaded[i]);
-    }*/
     String str = null;
     try{
      str = (String)JOptionPane.showInputDialog(null,"Choose a file to load:","Load Game",JOptionPane.PLAIN_MESSAGE,null,loaded,loaded[0]);
@@ -109,6 +110,7 @@ public class Background{
   }
   int newplace = player.location;
   while (newplace!=-1){
+   changePic(1,newplace);
    newplace = transition(newplace);
    if (newplace==-1){
     addText("Game Over "+Background.player.name+".");
@@ -164,6 +166,7 @@ public class Background{
   }
 
   player.location = nextplace;
+  //changePic(1,nextplace);
   game.update();
   return nextplace;
  }
@@ -177,6 +180,54 @@ public class Background{
  public static void addQuote(String addition){
   addition = "\""+addition+"\"";
   addText(addition);
+ }
+
+ public static void changePic(int type, int value){ //type is.. type. value is whatever number of the given type the picture is
+  String name = "none";
+  if (type==1){ //location
+   name = location.identifier(value);
+  } else if (type==2){ //npc
+   Npc npc = new Npc(value);
+   name = Npc.name;
+  }
+  name = "pictures/"+name+".jpg";
+  try {
+   game.picture = new ImagePanel(ImageIO.read(new File(name)));
+  } catch (IOException e){
+   try{
+    game.picture = new ImagePanel(ImageIO.read(new File("pictures/none.jpg")));
+    System.out.println(name+" not found.");
+   } catch (IOException exc){
+    System.out.println("\"pictures\" file either missing or empty.");
+   }
+  }
+ }
+
+ public static void changePic(int[][] values){//for combat against creatures
+  int n = values.length;
+  game.fullPicture.removeAll();
+  game.fullPicture.setPreferredSize(new Dimension(n*200,200));
+  game.fullPicture.setLayout(new GridLayout(1,n,0,0));
+  if (n==1){
+   game.fullPicture.setLayout(new BorderLayout());
+   JPanel breehh;
+   breehh = new JPanel();
+   breehh.setPreferredSize(new Dimension(130,100));
+   game.fullPicture.add(breehh,BorderLayout.WEST);
+  }
+  for (int i=0; i<n; i++){
+   try{
+     game.fullPicture.add(new ImagePanel(ImageIO.read(new File("pictures/"+new Creature(values[i][0],1).name+".jpg"))),BorderLayout.CENTER);
+   } catch (IOException e){
+    try{
+     game.fullPicture.add(new ImagePanel(ImageIO.read(new File("pictures/none.jpg"))), BorderLayout.CENTER);
+     System.out.println("pictures/"+new Creature(values[i][0],1).name+".jpg not found.");
+    } catch (IOException exc){
+     System.out.println("\"pictures\" file either missing or empty.");
+    }
+   }
+   game.fullPicture.revalidate();
+  }
  }
 
  public static void wait(int x){

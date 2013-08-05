@@ -10,6 +10,8 @@ public class Combat{
 
  public static int combat(boolean boss, int[][] creatureinfo){//return 1 won, 2 fled, 3 died        input {(type, level), (type, level)...}
   if (!boss){
+   Background.combat = true;
+   Background.changePic(creatureinfo);
    creature = new Creature[creatureinfo.length];
    for (int i=0; i<creatureinfo.length; i++){
     creature[i] = new Creature(creatureinfo[i][0], creatureinfo[i][1]);
@@ -55,6 +57,7 @@ public class Combat{
      Background.addText(string);
      Background.spacer();
      x=0;
+     Background.combat = false;
      Background.game.update();
      return 2;
     }
@@ -87,6 +90,7 @@ public class Combat{
       Background.game.update();
      } else if (choice[0]==6){
       if (playerflee()){
+       Background.combat = false;
        Background.game.update();
        x=0;
        refresh();
@@ -106,6 +110,8 @@ public class Combat{
       if (!checkplayer()){
        x=0;
        refresh();
+       Background.combat = false;
+       Background.game.update();
        return 3;
       }
      }
@@ -121,6 +127,8 @@ public class Combat{
       if (!checkplayer()){
        x=0;
        refresh();
+       Background.combat = false;
+       Background.game.update();
        return 3;
       }
      }
@@ -131,6 +139,8 @@ public class Combat{
       if (playerflee()){
        x=0;
        refresh();
+       Background.combat = false;
+       Background.game.update();
        return 2;
       }
      }
@@ -177,14 +187,17 @@ public class Combat{
     Background.player.bestiary[creature[i].identity]++;
    }
    x=0;
-   Background.game.update();
+   Background.combat = false;
    refresh();
+   Background.game.update();
    return 1;
   } else if (boss){
    Background.addText("This is a boss combat. It's not done yet. Actually, it's not really even started yet.");
   }
   x=0;
   refresh();
+  Background.combat = false;
+  Background.game.update();
   return 1;
  }
 
