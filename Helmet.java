@@ -56,7 +56,7 @@ public class Helmet extends Thingy{
    basharmor = 1;
    buy = 9;
    sell = 6;
-   recipeSuccess = "You attach the Ram's Horn to the front of the Woolen Cap to create a Ramicorn Cap.";
+   recipeSuccess = "You attach the Ram's Horn to the top of the Woolen Cap to create a Ramicorn Cap.";
    setRecipe(new int[][]{{3,11,1},{4,1,1}});
    setCrafts(new int[][]{});
    description = "A thin helmet made of wool with the horn of a ram attached. One word, ridiculous.";

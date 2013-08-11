@@ -35,6 +35,8 @@ public class Npc{
     Background.spacer();
     Background.addQuote("I am "+name+", and I am the chieftain of this village.");
     Background.spacer();
+    Background.addQuote("You are welcome here, feel free to use the "+Location.identifier(4)+" to rest and regain your health, and also to store any items you may have.");
+    Background.spacer();
     Background.addQuote("If you're looking for something to do here, my daughter, "+new Npc(2).name+" has been asking around for help with something. She refuses to tell me what it is though.");
     Background.spacer();
     Background.addQuote("If you'd like to help her, my daughter is in the "+Location.identifier(3)+".");
@@ -87,7 +89,7 @@ public class Npc{
       Background.player.quests[1]=4;
       Background.spacer();
      } else {
-      Background.addQuote("You don't have one, come back to me when you do.");
+      Background.addQuote("You don't have one, come back to me when you do. Remember that you make one by crafting a Long Stick with a Jagged Rock.");
       Background.spacer();
      }
     } else {
@@ -221,7 +223,7 @@ public class Npc{
     Background.addQuote("My daughter left to the south a little while ago, saying she was exploring. Normally I wouldn't worry, but she generally comes back once she gets hungry and she hasn't been back for a few hours.");
     Background.spacer();
     Background.addQuote("I'd go myself, but I'm busy doing chieftany things at the moment. Just check to make sure she's ok and let me know so I can put my mind at ease.");
-    Background.player.quests[1]=8;
+    Background.player.quests[1]=9;
     Background.spacer();
    } else if (Background.player.quests[1]==9){
     Background.addQuote("I'm starting to wonder how my daughter's doing, can you go check on her for me? She went to the "+Location.identifier(10)+".");
@@ -234,7 +236,8 @@ public class Npc{
     Background.addQuote("Take two Boar Hide and a Thread and craft them, and you will get Boar Hide Armor. Craft that with two Boar Tusks and you will be able to make an even better piece of armor.");
     Background.spacer();
     Background.addQuote("I hope that information is helpful to you.");
-    Background.player.quests[1]=10;
+    Background.player.quests[1]=11;
+    Background.player.quests[3]=2;
     Background.spacer();
    } else if (Background.player.quests[1]==11){
     Background.addQuote("Thank you again for saving "+new Npc(2).name+".");
@@ -320,8 +323,9 @@ public class Npc{
     if (Background.yesno()){
      if (Background.player.inventoryContains(5,5,1)){
       Background.addQuote("Oh yay! You got my Wooden Doll for me! This is mine right? I can't really tell. She says she is mine though, so it's ok.");
+      Background.player.removeThingy(5,5,1);
       Background.spacer();
-      Background.addQuote("This is as far as I've gotten now, now i gotta go fix the whole wooden vest thingy... bleh");
+      Background.addQuote("Thank you "+Background.player.name+", thank you!");
      } else {
       Background.addQuote("Where is she? I don't see her. You lied, you don't really have her, do you?");
       Background.spacer();
@@ -347,6 +351,11 @@ public class Npc{
    } else if (Background.player.quests[3]==1){
     Background.addQuote("I hope you are doing well. Good luck out there.");
     Background.spacer();
+   } else if (Background.player.quests[3]==2){
+    Background.addQuote("Hello "+Background.player.name+"! I heard that you saved Lilia from the "+Location.identifier(10)+", and I respect you for that. I'd like to join you if you'd have me.");
+    Background.spacer();
+    Background.player.companions[2][0]=1;
+    Background.player.addCompanion(2);
    }
 
   } else if (identity==4){          //Babu

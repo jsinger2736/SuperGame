@@ -6,7 +6,6 @@ public class Combat{
  static String string;
  static int x = 0, j = 0;
 
- //add bleeding from slash attacks, weakening from stab attacks, and stunning from bash attacks (possibilities, are determined by the weapon)
 
  public static int combat(boolean boss, int[][] creatureinfo){//return 1 won, 2 fled, 3 died        input {(type, level), (type, level)...}
   if (!boss){
@@ -96,24 +95,41 @@ public class Combat{
        refresh();
        return 2;
       }
+     }///////////////////////////////////////////////////////////////////
+     if (!Background.player.currentCompanions[0].name.equals("none")){
+      companiondoesdamage(0);
      }
-     checkcreature(choice[1]);
+     if (!Background.player.currentCompanions[1].name.equals("none")){
+      companiondoesdamage(1);
+     }//////////////////////////////////////////////////////////////////////
+     for (int i=0; i<x; i++){
+      checkcreature(i);
+     }
      j = 0;
      for (int i=0; i<x; i++){
       if (creature[i].health!=0){
        creaturedoesdamage(i, creature[i].damagetype(), defend);
        Background.game.update();
+       if (!checkplayer()){
+        x=0;
+        refresh();
+        Background.combat = false;
+        Background.game.update();
+        return 3;
+       }
       } else {
        j++;
        Background.game.update();
       }
-      if (!checkplayer()){
-       x=0;
-       refresh();
-       Background.combat = false;
-       Background.game.update();
-       return 3;
-      }
+     }
+     playereffects();
+     Background.game.update();
+     if (!checkplayer()){
+      x=0;
+      refresh();
+      Background.combat = false;
+      Background.game.update();
+      return 3;
      }
      if (j==x){
       break;
@@ -122,15 +138,24 @@ public class Combat{
      for (int i=0; i<x; i++){
       if (creature[i].health!=0){
        creaturedoesdamage(i, creature[i].damagetype(), defend);
-      }
-      Background.game.update();
-      if (!checkplayer()){
-       x=0;
-       refresh();
-       Background.combat = false;
        Background.game.update();
-       return 3;
+       if (!checkplayer()){
+        x=0;
+        refresh();
+        Background.combat = false;
+        Background.game.update();
+        return 3;
+       }
       }
+     }
+     playereffects();
+     Background.game.update();
+     if (!checkplayer()){
+      x=0;
+      refresh();
+      Background.combat = false;
+      Background.game.update();
+      return 3;
      }
      if (choice[0]==1 || choice[0]==2 || choice[0]==3 || choice[0]==4){
       playerdoesdamage(choice[1],choice[0],false);
@@ -143,8 +168,16 @@ public class Combat{
        Background.game.update();
        return 2;
       }
+     }///////////////////////////////////////////////////////////////////
+     if (!Background.player.currentCompanions[0].name.equals("none")){
+      companiondoesdamage(0);
      }
-     checkcreature(choice[1]);
+     if (!Background.player.currentCompanions[1].name.equals("none")){
+      companiondoesdamage(1);
+     }////////////////////////////////////////////////////////////////
+     for (int i=0; i<x; i++){
+      checkcreature(i);
+     }
      j=0;
      for (int i=0; i<x; i++){
       if (creature[i].health==0){
@@ -179,6 +212,7 @@ public class Combat{
      }
      Background.spacer();
      if (drop[0]!=4){
+      Background.combat = false;
       Background.player.pickUp(drop[0],drop[1]);
      } else {
       Background.player.money = Background.player.money+drop[1];
@@ -186,9 +220,15 @@ public class Combat{
     }
     Background.player.bestiary[creature[i].identity]++;
    }
-   x=0;
    Background.combat = false;
    refresh();
+   if (!Background.player.currentCompanions[0].name.equals("none") && Background.player.currentCompanions[0].health!=0){
+    Background.player.companions[Companion.identify(Background.player.currentCompanions[0].name)][2]=Background.player.companions[Companion.identify(Background.player.currentCompanions[0].name)][2]+x;
+   }
+   if (!Background.player.currentCompanions[1].name.equals("none") && Background.player.currentCompanions[1].health!=0){
+    Background.player.companions[Companion.identify(Background.player.currentCompanions[1].name)][2]=Background.player.companions[Companion.identify(Background.player.currentCompanions[1].name)][2]+x;
+   }
+   x=0;
    Background.game.update();
    return 1;
   } else if (boss){
@@ -203,58 +243,242 @@ public class Combat{
 
  static void creaturedoesdamage(int creaturenum, int type, boolean defend){
   if (!creature[creaturenum].stunned){
-   String string = "The "+creature[creaturenum].name+" attacks";
+   boolean[] companions = {false,false};
+   int number = 1;
+   if (!Background.player.currentCompanions[0].name.equals("none") && Background.player.currentCompanions[0].health!=0){
+    companions[0] = true;
+    number++;
+   }
+   if (!Background.player.currentCompanions[1].name.equals("none") && Background.player.currentCompanions[1].health!=0){
+    companions[1] = true;
+    number++;
+   }
+   int random = (int)(1+Math.random()*number);
+
+   if (random==1){
+    String string = "The "+creature[creaturenum].name+" attacks";
+    if (type==1){
+     string = string+" you.";
+    } else if (type==2){
+     string = string+" with a slashing motion.";
+    } else if (type==3){
+     string = string+" by stabbing at you.";
+    } else if (type==4){
+     string = string+" by attempting to bash you.";
+    }
+    Background.addText(string);
+    Background.spacer();
+    double chance = Math.random();
+    if (chance<=(1-(Background.player.dodge+Background.player.equippedAccessory.dodgeBoost))*creature[creaturenum].accuracy){
+     int damage = creature[creaturenum].damageby(type);
+     if (defend){
+      damage = (int)(damage/2);
+     }
+     damage = Background.player.damageto(damage,type);
+     if (type==2){
+      if (Math.random()<(creature[creaturenum].bleedChance*(1-Background.player.resist(type)))){
+       Background.spacer();
+       Background.player.bleeding = new int[]{(int)(damage/4), 3};
+       if (Background.player.bleeding[0]<1){
+        Background.player.bleeding[0]=1;
+       }
+       Background.addText("The "+creature[creaturenum].name+"'s attack causes you to begin bleeding.");
+      }
+     } else if (type==3){
+      if (Math.random()<(creature[creaturenum].weakenChance*(1-Background.player.resist(type)))){
+       Background.spacer();
+       Background.player.weakened = 3;
+       Background.addText("The "+creature[creaturenum].name+"'s attack weakens you.");
+      }
+     } else if (type==4){
+      if (Math.random()<(creature[creaturenum].stunChance*(1-Background.player.resist(type)))){
+       Background.spacer();
+       Background.player.stunned = true;
+       Background.addText("The "+creature[creaturenum].name+"'s attack stuns you.");
+      }
+     }
+    } else{
+     Background.addText("The "+creature[creaturenum].name+"'s attack misses.");
+    }
+    Background.spacer();
+
+   } else if (random==2 && !Background.player.currentCompanions[0].name.equals("none") && Background.player.currentCompanions[0].health!=0){
+    String string = "The "+creature[creaturenum].name+" attacks "+Background.player.currentCompanions[0].name;
+    if (type==1){
+     string = string+".";
+    } else if (type==2){
+     string = string+" with a slashing motion.";
+    } else if (type==3){
+     string = string+" by stabbing at them.";
+    } else if (type==4){
+     string = string+" by attempting to bash them.";
+    }
+    Background.addText(string);
+    Background.spacer();
+    double chance = Math.random();
+    if (chance<=(1-(Background.player.currentCompanions[0].dodge))*creature[creaturenum].accuracy){
+     int damage = creature[creaturenum].damageby(type);
+     damage = Background.player.currentCompanions[0].damageto(damage,type);
+     if (type==2){
+      if (Math.random()<(creature[creaturenum].bleedChance*(1-Background.player.currentCompanions[0].bleedResist))){
+       Background.spacer();
+       Background.player.currentCompanions[0].bleeding = new int[]{(int)(damage/4), 3};
+       if (Background.player.currentCompanions[0].bleeding[0]<1){
+        Background.player.currentCompanions[0].bleeding[0]=1;
+       }
+       Background.addText("The "+creature[creaturenum].name+"'s attack causes "+Background.player.currentCompanions[0].name+" to begin bleeding.");
+      }
+     } else if (type==3){
+      if (Math.random()<(creature[creaturenum].weakenChance*(1-Background.player.currentCompanions[0].weakenResist))){
+       Background.spacer();
+       Background.player.currentCompanions[0].weakened = 3;
+       Background.addText("The "+creature[creaturenum].name+"'s attack weakens "+Background.player.currentCompanions[0].name+".");
+      }
+     } else if (type==4){
+      if (Math.random()<(creature[creaturenum].stunChance*(1-Background.player.currentCompanions[0].stunResist))){
+       Background.spacer();
+       Background.player.currentCompanions[0].stunned = true;
+       Background.addText("The "+creature[creaturenum].name+"'s attack stuns "+Background.player.currentCompanions[0].name+".");
+      }
+     }
+    } else{
+     Background.addText("The "+creature[creaturenum].name+"'s attack misses.");
+    }
+    Background.spacer();
+    if (Background.player.currentCompanions[0].health==0){
+     Background.addText(Background.player.currentCompanions[0].name+" has been knocked out!");
+     Background.spacer();
+    }
+
+   } else if (random==2 || (random==3 && !Background.player.currentCompanions[1].name.equals("none") && Background.player.currentCompanions[1].health!=0)){
+    String string = "The "+creature[creaturenum].name+" attacks "+Background.player.currentCompanions[1].name;
+    if (type==1){
+     string = string+".";
+    } else if (type==2){
+     string = string+" with a slashing motion.";
+    } else if (type==3){
+     string = string+" by stabbing at them.";
+    } else if (type==4){
+     string = string+" by attempting to bash them.";
+    }
+    Background.addText(string);
+    Background.spacer();
+    double chance = Math.random();
+    if (chance<=(1-(Background.player.currentCompanions[1].dodge))*creature[creaturenum].accuracy){
+     int damage = creature[creaturenum].damageby(type);
+     damage = Background.player.currentCompanions[1].damageto(damage,type);
+     if (type==2){
+      if (Math.random()<(creature[creaturenum].bleedChance*(1-Background.player.currentCompanions[1].bleedResist))){
+       Background.spacer();
+       Background.player.currentCompanions[1].bleeding = new int[]{(int)(damage/4), 3};
+       if (Background.player.currentCompanions[1].bleeding[0]<1){
+        Background.player.currentCompanions[1].bleeding[0]=1;
+       }
+       Background.addText("The "+creature[creaturenum].name+"'s attack causes "+Background.player.currentCompanions[1].name+" to begin bleeding.");
+      }
+     } else if (type==3){
+      if (Math.random()<(creature[creaturenum].weakenChance*(1-Background.player.currentCompanions[1].weakenResist))){
+       Background.spacer();
+       Background.player.currentCompanions[1].weakened = 3;
+       Background.addText("The "+creature[creaturenum].name+"'s attack weakens "+Background.player.currentCompanions[1].name+".");
+      }
+     } else if (type==4){
+      if (Math.random()<(creature[creaturenum].stunChance*(1-Background.player.currentCompanions[1].stunResist))){
+       Background.spacer();
+       Background.player.currentCompanions[1].stunned = true;
+       Background.addText("The "+creature[creaturenum].name+"'s attack stuns "+Background.player.currentCompanions[1].name+".");
+      }
+     }
+    } else{
+     Background.addText("The "+creature[creaturenum].name+"'s attack misses.");
+    }
+    Background.spacer();
+    if (Background.player.currentCompanions[1].health==0){
+     Background.addText(Background.player.currentCompanions[1].name+" has been knocked out!");
+     Background.spacer();
+    }
+
+   } else if (random==0){
+    System.out.println("Hey, you shouldn't be getting this message. You got a random of 0 somehow in creaturedoesdamage of combat");
+   } else {
+    System.out.println("somethin's up with Combat.creaturedoesdamage. fix it.");
+   }
+  } else {
+   creature[creaturenum].stunned = false;
+   Background.addText("The "+creature[creaturenum].name+" is stunned, but seems to be pulling itself together.");
+   Background.spacer();
+  }
+ }
+
+ static void companiondoesdamage(int number){
+  if (!Background.player.currentCompanions[number].stunned){
+   int total = 0;
+   for (int i=0; i<x; i++){
+    if (creature[i].health==0){
+     total++;
+    }
+   }
+   if (total==x){
+    return;
+   }
+   String string = Background.player.currentCompanions[number].name+" attacks";
+   int choice;
+   while (true){
+    choice = (int)(Math.random()*(x));
+    if (creature[choice].health!=0){
+     break;
+    }
+   }
+   int type = Background.player.currentCompanions[number].damagetype();
+   string = string+" the "+creature[choice].name;
    if (type==1){
-    string = string+" you.";
+    string = string+".";
    } else if (type==2){
     string = string+" with a slashing motion.";
    } else if (type==3){
-    string = string+" by stabbing at you.";
+    string = string+" by stabbing at it.";
    } else if (type==4){
-    string = string+" by attempting to bash you.";
+    string = string+" by attempting to bash it.";
    }
    Background.addText(string);
    Background.spacer();
    double chance = Math.random();
-   if (chance<=(1-(Background.player.dodge+Background.player.equippedAccessory.dodgeBoost))*creature[creaturenum].accuracy){
-    int damage = creature[creaturenum].damageby(type);
-    if (defend){
-     damage = (int)(damage/2);
-    }
-    damage = Background.player.damageto(damage,type);
+   if (chance<=(1-(creature[choice].dodge))*Background.player.currentCompanions[number].accuracy){
+    int damage = Background.player.currentCompanions[number].damageby(type);
+    damage = creature[choice].damageto(damage,type);
     if (type==2){
-     if (Math.random()<(creature[creaturenum].bleedChance*(1-Background.player.resist(type)))){
+     if (Math.random()<(Background.player.currentCompanions[number].bleedChance*(1-creature[choice].bleedResist))){
       Background.spacer();
-      Background.player.bleeding = new int[]{(int)(damage/4), 3};
-      if (Background.player.bleeding[0]<1){
-       Background.player.bleeding[0]=1;
+      creature[choice].bleeding = new int[]{(int)(damage/4), 3};
+      if (creature[choice].bleeding[0]<1){
+       creature[choice].bleeding[0]=1;
       }
-      Background.addText("The "+creature[creaturenum].name+"'s attack causes you to begin bleeding.");
+      Background.addText(Background.player.currentCompanions[number].name+"'s attack causes the "+creature[choice].name+" to begin bleeding.");
      }
     } else if (type==3){
-     if (Math.random()<(creature[creaturenum].weakenChance*(1-Background.player.resist(type)))){
+     if (Math.random()<(Background.player.currentCompanions[number].weakenChance*(1-creature[choice].weakenResist))){
       Background.spacer();
-      Background.player.weakened = 3;
-      //Background.player.basearmor = (int)(Background.player.basearmor*.74);
-      //Background.player.slasharmor = (int)(Background.player.slasharmor*.74);
-      //Background.player.stabarmor = (int)(Background.player.stabarmor*.74);
-      //Background.player.basharmor = (int)(Background.player.basharmor*.74);
-      Background.addText("The "+creature[creaturenum].name+"'s attack weakens you.");
+      creature[choice].weakened = 3;
+      Background.addText(Background.player.currentCompanions[number].name+"'s attack weakens the "+creature[choice].name+".");
      }
     } else if (type==4){
-     if (Math.random()<(creature[creaturenum].stunChance*(1-Background.player.resist(type)))){
+     if (Math.random()<(Background.player.currentCompanions[number].stunChance*(1-creature[choice].stunResist))){
       Background.spacer();
-      Background.player.stunned = true;
-      Background.addText("The "+creature[creaturenum].name+"'s attack stuns you.");
+      creature[choice].stunned = true;
+      Background.addText(Background.player.currentCompanions[number].name+"'s attack stuns the "+creature[choice].name+".");
      }
     }
    } else{
-    Background.addText("The "+creature[creaturenum].name+"'s attack misses.");
+    Background.addText("The "+Background.player.currentCompanions[number].name+"'s attack misses.");
    }
    Background.spacer();
+   if (creature[choice].health==0){
+    Background.addText("The "+creature[choice].name+" has been defeated!");
+    Background.spacer();
+   }
   } else {
-   creature[creaturenum].stunned = false;
-   Background.addText("The "+creature[creaturenum].name+" is stunned, but seems to be pulling itself together.");
+   Background.player.currentCompanions[number].stunned = false;
+   Background.addText(Background.player.currentCompanions[number].name+" is stunned, but seems to be recovering.");
    Background.spacer();
   }
  }
@@ -293,10 +517,6 @@ public class Combat{
      if (Math.random()<(Background.player.chance(type)*(1-creature[creaturenum].weakenResist))){
       Background.spacer();
       creature[creaturenum].weakened = 3;
-      //creature[creaturenum].basearmor = (int)(creature[creaturenum].basearmor*.74);
-      //creature[creaturenum].slasharmor = (int)(creature[creaturenum].slasharmor*.74);
-      //creature[creaturenum].stabarmor = (int)(creature[creaturenum].stabarmor*.74);
-      //creature[creaturenum].basharmor = (int)(creature[creaturenum].basharmor*.74);
       Background.addText("Your attack weakens the "+creature[creaturenum].name+".");
      }
     } else if (type==4){
@@ -308,13 +528,17 @@ public class Combat{
     }
     if (Math.random()>Background.player.equippedWeapon.durability){
      Background.spacer();
-     Background.addText("Your "+Background.player.equippedWeapon.name+" breaks as you attack.");
+     Background.game.makeMessage("Oh Noes!!","Your "+Background.player.equippedWeapon.name+" broke when you attacked.");
      Background.player.equippedWeapon = new Weapon(0);
     }
    } else {
     Background.addText("Your attack misses.");
    }
    Background.spacer();
+   if (creature[creaturenum].health==0){
+    Background.addText("You defeated the "+creature[creaturenum].name+"!");
+    Background.spacer();
+   }
   } else {
    Background.player.stunned = false;
    Background.addText("You're stunned for the moment, but you shake it off.");
@@ -380,10 +604,6 @@ public class Combat{
    if (creature[creaturenum].weakened>0){
     creature[creaturenum].weakened--;
     if (creature[creaturenum].weakened==0){
-     //creature[creaturenum].basearmor = (int)(creature[creaturenum].basearmor*1.35);
-     //creature[creaturenum].slasharmor = (int)(creature[creaturenum].slasharmor*1.35);
-     //creature[creaturenum].stabarmor = (int)(creature[creaturenum].stabarmor*1.35);
-     //creature[creaturenum].basharmor = (int)(creature[creaturenum].basharmor*1.35);
      Background.addText("The "+creature[creaturenum].name+" recovers from its weakened state.");
     }
    }
@@ -403,23 +623,19 @@ public class Combat{
    }
   }
   if (creature[creaturenum].health==0){
-   Background.addText("You defeated the "+creature[creaturenum].name+"!");
-   Background.spacer();
+   //Background.addText("You defeated the "+creature[creaturenum].name+"!");
+   //Background.spacer();
    return false;
   } else {
    return true;
   }
  }
 
- static boolean checkplayer(){//true if alive, false if dead
+ static void playereffects(){
   if (Background.player.health>0){
    if (Background.player.weakened>0){
     Background.player.weakened--;
     if (Background.player.weakened==0){
-     //Background.player.basearmor = (int)(Background.player.basearmor*1.35);
-     //Background.player.slasharmor = (int)(Background.player.slasharmor*1.35);
-     //Background.player.stabarmor = (int)(Background.player.stabarmor*1.35);
-     //Background.player.basharmor = (int)(Background.player.basharmor*1.35);
      Background.addText("You recover from your weakened state.");
     }
    }
@@ -438,6 +654,9 @@ public class Combat{
     }
    }
   }
+ }
+
+ static boolean checkplayer(){//true if alive, false if dead
   if (Background.player.health==0){
    if (x==1){
     Background.addText("The "+creature[0].name+" defeated you!");

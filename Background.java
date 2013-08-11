@@ -79,7 +79,7 @@ public class Background{
      name = player.name;
     }
    }
-   if (name!=null && !name.equals("")){
+   if (name!=null && !name.equals("") &&!name.equals("PlayerName")){
     break;
    }
   }
@@ -182,13 +182,36 @@ public class Background{
   addText(addition);
  }
 
- public static void changePic(int type, int value){ //type is.. type. value is whatever number of the given type the picture is
+ public static void changePic(int type, int identity){ //type is.. type. identity is whatever number of the given type the picture is
   String name = "none";
   if (type==1){ //location
-   name = location.identifier(value);
+   name = location.identifier(identity);
   } else if (type==2){ //npc
-   Npc npc = new Npc(value);
+   Npc npc;
+   npc = new Npc(identity);
    name = Npc.name;
+  } else { //item (itemtype+2)
+   if (type==3){
+    Weapon weapon;
+    weapon = new Weapon(identity);
+    name = weapon.name;
+   } else if (type==4){
+    Armor armor;
+    armor = new Armor(identity);
+    name = armor.name;
+   } else if (type==5){
+    Item item;
+    item = new Item(identity);
+    name = item.name;
+   } else if (type==6){
+    Helmet helmet;
+    helmet = new Helmet(identity);
+    name = helmet.name;
+   } else if (type==7){
+    Accessory accessory;
+    accessory = new Accessory(identity);
+    name = accessory.name;
+   }
   }
   name = "pictures/"+name+".jpg";
   try {
@@ -201,10 +224,11 @@ public class Background{
     System.out.println("\"pictures\" file either missing or empty.");
    }
   }
+  game.update();
  }
 
- public static void changePic(int[][] values){//for combat against creatures
-  int n = values.length;
+ public static void changePic(int[][] identities){//for combat against creatures
+  int n = identities.length;
   game.fullPicture.removeAll();
   game.fullPicture.setPreferredSize(new Dimension(n*200,200));
   game.fullPicture.setLayout(new GridLayout(1,n,0,0));
@@ -217,11 +241,11 @@ public class Background{
   }
   for (int i=0; i<n; i++){
    try{
-     game.fullPicture.add(new ImagePanel(ImageIO.read(new File("pictures/"+new Creature(values[i][0],1).name+".jpg"))),BorderLayout.CENTER);
+     game.fullPicture.add(new ImagePanel(ImageIO.read(new File("pictures/"+new Creature(identities[i][0],1).name+".jpg"))),BorderLayout.CENTER);
    } catch (IOException e){
     try{
      game.fullPicture.add(new ImagePanel(ImageIO.read(new File("pictures/none.jpg"))), BorderLayout.CENTER);
-     System.out.println("pictures/"+new Creature(values[i][0],1).name+".jpg not found.");
+     System.out.println("pictures/"+new Creature(identities[i][0],1).name+".jpg not found.");
     } catch (IOException exc){
      System.out.println("\"pictures\" file either missing or empty.");
     }
@@ -486,9 +510,16 @@ public class Background{
    for (int i=0; i<player.locations.length; i++){
     locations[i] = Integer.parseInt(br.readLine());
    }
+   char C2 = br.readLine().charAt(0);
+   int[][] companions = new int[player.companions.length][player.companions[0].length];
+   for (int i=0; i<player.companions.length; i++){
+    companions[i][0] = Integer.parseInt(br.readLine());
+    companions[i][1] = Integer.parseInt(br.readLine());
+    companions[i][2] = Integer.parseInt(br.readLine());
+   }
    char D = br.readLine().charAt(0);
    in.close();
-   player = new Player(name, level, experience, experiencetolevel, maxhealth, health, maxmana, mana, location, money, normaldamage, slashdamage, stabdamage, bashdamage, normalarmor, slasharmor, stabarmor, basharmor, speed, accuracy, dodge, equippedWeapon, equippedArmor, equippedHelmet, equippedAccessory, weapons, armor, helmets, accessories, items, bestiary, chest, quests, locations);
+   player = new Player(name, level, experience, experiencetolevel, maxhealth, health, maxmana, mana, location, money, normaldamage, slashdamage, stabdamage, bashdamage, normalarmor, slasharmor, stabarmor, basharmor, speed, accuracy, dodge, equippedWeapon, equippedArmor, equippedHelmet, equippedAccessory, weapons, armor, helmets, accessories, items, bestiary, chest, quests, locations, companions);
   } catch(Exception e){
    e.printStackTrace();
    System.err.println("Error: "+e.getMessage());

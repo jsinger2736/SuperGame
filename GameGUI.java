@@ -7,8 +7,8 @@ import javax.imageio.*;
 public class GameGUI extends JFrame{
  private JMenuBar menubar;
  private JMenu file, info, extra;
- private JMenuItem newgame, savegame, loadgame, exit, gameinfo, creatureinfo, iteminfo, hint;
- private JPanel north, west, innerwest, /*westgrid,*/ east, innereast, eastgrid, south, southgrid, southtop, southbot, blah;
+ private JMenuItem newgame, savegame, loadgame, exit, gameinfo, creatureinfo, iteminfo, companioninfo, hint;
+ private JPanel north, west, innerwest, /*westgrid,*/ east, innereast, eastgrid, south, southgrid, southtop, southbot, blah, companion1, companion2;
  public JPanel fullPicture;
  private JLabel location, charname, charlevel, charhealth, charmana/*, enemname, enemlevel, enemhealth, enemmana*/;
  private JLabel[] enemname, enemlevel, enemhealth;
@@ -17,7 +17,7 @@ public class GameGUI extends JFrame{
  private JButton[] choices;
  public JTextArea centerTA;
  private JScrollPane centerSP, enemSP, pictureSP;
- public static ImagePanel picture;
+ public ImagePanel picture;
  private JSplitPane centerSplit;
  private MenuHandler menuHandler;
  private ButtonHandler buttonHandler;
@@ -25,6 +25,8 @@ public class GameGUI extends JFrame{
  public InventoryGUI inventoryGUI;
  private BestiaryGUI bestiaryGUI;
  private ItemInfoGUI itemInfoGUI;
+ private CompanionInfoGUI companionInfoGUI;
+ CompanionGUI companionGUI;
  private static boolean b;
 
  public GameGUI(){
@@ -54,9 +56,12 @@ public class GameGUI extends JFrame{
   creatureinfo.addActionListener(menuHandler);
   iteminfo = new JMenuItem("Item Info");
   iteminfo.addActionListener(menuHandler);
+  companioninfo = new JMenuItem("Companion Info");
+  companioninfo.addActionListener(menuHandler);
   info.add(gameinfo);
   info.add(creatureinfo);
   info.add(iteminfo);
+  info.add(companioninfo);
   extra = new JMenu("Extra");
   hint = new JMenuItem("Hint");
   hint.addActionListener(menuHandler);
@@ -80,8 +85,8 @@ public class GameGUI extends JFrame{
   innereast.setLayout(new BoxLayout(innereast, BoxLayout.Y_AXIS));
   charname = new JLabel("PlayerName");
   charlevel = new JLabel("PlayerLevel");
-  charname.setBorder(BorderFactory.createEmptyBorder(12,0,8,0));
-  charlevel.setBorder(BorderFactory.createEmptyBorder(0,0,8,0));
+  charname.setBorder(BorderFactory.createEmptyBorder(12,0,7,0));
+  charlevel.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
   eastgrid = new JPanel();
   eastgrid.setLayout(new GridLayout(1,2,5,8));
   charhealth = new JLabel("CharHealth");
@@ -92,9 +97,17 @@ public class GameGUI extends JFrame{
   //eastgrid.add(charmana);
   charname.setAlignmentX(Component.CENTER_ALIGNMENT);
   charlevel.setAlignmentX(Component.CENTER_ALIGNMENT);
+  companion1 = new JPanel();
+  companion2 = new JPanel();
+  companion1.setLayout(new BoxLayout(companion1, BoxLayout.Y_AXIS));
+  companion1.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
+  companion2.setLayout(new BoxLayout(companion2, BoxLayout.Y_AXIS));
+  companion2.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
   innereast.add(charname);
   innereast.add(charlevel);
   innereast.add(eastgrid);
+  innereast.add(companion1);
+  innereast.add(companion2);
   east.add(innereast);
   container.add(east, BorderLayout.EAST);
 
@@ -141,7 +154,11 @@ public class GameGUI extends JFrame{
   }
   fullPicture = new JPanel();
   fullPicture.setLayout(new BorderLayout());
-  fullPicture.add(picture, BorderLayout.CENTER);
+  try{
+   fullPicture.add(picture, BorderLayout.CENTER);
+  } catch (Exception e){
+   makeMessage("Something is MISSING", "The \"pictures\" file is missing.");
+  }
   pictureSP = new JScrollPane(fullPicture,
    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -226,6 +243,12 @@ public class GameGUI extends JFrame{
     } else {
      itemInfoGUI.setVisible(true);
     }
+   } else if (source==companioninfo){
+    if (companionInfoGUI==null){
+     companionInfoGUI = new CompanionInfoGUI();
+    } else {
+     companionInfoGUI.setVisible(true);
+    }
    } else if (source==hint){
     //System.out.println("hint");
     makeMessage("Hint","This function is currently unavailable.");
@@ -308,6 +331,10 @@ public class GameGUI extends JFrame{
    statsGUI.basharm.setText((int)((Background.player.basharmor+Background.player.equippedArmor.basharmor+Background.player.equippedWeapon.basharmor+Background.player.equippedHelmet.basharmor)*xyz)+"");
    statsGUI.accuracy.setText(Background.player.accuracy+"%");
    statsGUI.dodge.setText((double)Math.round((Background.player.dodge+Background.player.equippedAccessory.dodgeBoost)*1000)/1000+"%");
+   statsGUI.south.removeAll();
+   if (!Background.player.currentCompanions[0].name.equals("none")){
+    statsGUI.south.add(statsGUI.companions);
+   }
    statsGUI.pack();
   } catch(Exception e) {
   }
@@ -380,6 +407,10 @@ public class GameGUI extends JFrame{
   } catch(Exception e) {
   }
   try{
+   companionInfoGUI.updateCompanionInfo();
+  } catch(Exception e){
+  }
+  try{
    Background.player.chestGUI.updateChest();
   } catch(Exception e){
   }
@@ -395,7 +426,65 @@ public class GameGUI extends JFrame{
     fullPicture.revalidate();
     pictureSP.setViewportView(fullPicture);
    } else {
+    fullPicture.revalidate();
+    pictureSP.setViewportView(fullPicture);
    }
+  } catch(Exception e){
+  }
+  try{
+   companion1.removeAll();
+   if (!Background.player.currentCompanions[0].name.equals("none")){
+    Background.player.companions[Companion.identify(Background.player.currentCompanions[0].name)][1]=Background.player.currentCompanions[0].health;
+    JLabel companion1name, companion1health, companion1curhealth;
+    JPanel companion1grid;
+    companion1name = new JLabel(Background.player.currentCompanions[0].name);
+    //companion1health = new JLabel("Health: ");
+    companion1curhealth = new JLabel(Integer.toString(Background.player.currentCompanions[0].health)+"/"+Integer.toString(Background.player.currentCompanions[0].maxhealth));
+    companion1name.setAlignmentX(Component.CENTER_ALIGNMENT);
+    companion1name.setBorder(BorderFactory.createEmptyBorder(12,0,8,0));
+    companion1grid = new JPanel();
+    companion1grid.setLayout(new GridLayout(1,2,5,8));
+    companion1health = new JLabel("CharHealth");
+    companion1grid.add(new JLabel("Health: ",SwingConstants.RIGHT));
+    companion1grid.add(companion1curhealth);
+    companion1.add(companion1name);
+    companion1.add(companion1grid);
+   } 
+  } catch(Exception e){
+   if (!Background.player.name.equals("PlayerName")){
+    System.out.println("Boooo somethings wrong with companion1 update.");
+    System.out.println(e);
+    System.out.println("And error is done printing.");
+   }
+  }
+  try{
+   companion2.removeAll();
+   if (!Background.player.currentCompanions[1].name.equals("none")){
+    Background.player.companions[Companion.identify(Background.player.currentCompanions[1].name)][1]=Background.player.currentCompanions[1].health;
+    JLabel companion2name, companion2health, companion2curhealth;
+    JPanel companion2grid;
+    companion2name = new JLabel(Background.player.currentCompanions[1].name);
+    //companion2health = new JLabel("Health: ");
+    companion2curhealth = new JLabel(Integer.toString(Background.player.currentCompanions[1].health)+"/"+Integer.toString(Background.player.currentCompanions[1].maxhealth));
+    companion2name.setAlignmentX(Component.CENTER_ALIGNMENT);
+    companion2name.setBorder(BorderFactory.createEmptyBorder(12,0,8,0));
+    companion2grid = new JPanel();
+    companion2grid.setLayout(new GridLayout(1,2,5,8));
+    companion2health = new JLabel("CharHealth");
+    companion2grid.add(new JLabel("Health: ",SwingConstants.RIGHT));
+    companion2grid.add(companion2curhealth);
+    companion2.add(companion2name);
+    companion2.add(companion2grid);
+   } 
+  } catch(Exception e){
+   if (!Background.player.name.equals("PlayerName")){
+    System.out.println("Boooo somethings wrong with companion1 update.");
+    System.out.println(e);
+    System.out.println("And error is done printing.");
+   }
+  }
+  try{
+   companionGUI.updateCompanionGUI();
   } catch(Exception e){
   }
  }

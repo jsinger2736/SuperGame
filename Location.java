@@ -329,22 +329,39 @@ public class Location{
   Background.spacer();
   if (Background.player.quests[0]<1){
    Background.addText("Abul approaches you.");
+   Background.spacer();
    new Npc(3).interact();
   }
   while (true){
-   Background.addText("What would you like to do?");
-   Background.game.setButton(1,"Talk to "+new Npc(3).name);
-   Background.game.setButton(2,"Go to "+Location.identifier(5));
-   Background.game.setButton(3,"Go to "+Location.identifier(7));
-   Background.wait(3);
-   if (Background.choice==1){
-    Background.addText("You approach "+new Npc(3).name+".");
-    Background.spacer();
-    new Npc(3).interact();
-   } else if (Background.choice==2){
-    return 5;
-   } else if (Background.choice==3){
-    return 7;
+   if (Background.player.companions[2][0]!=2){
+    Background.addText("What would you like to do?");
+    Background.game.setButton(1,"Talk to "+new Npc(3).name);
+    Background.game.setButton(2,"Go to "+Location.identifier(5));
+    Background.game.setButton(3,"Go to "+Location.identifier(7));
+    Background.wait(3);
+    if (Background.choice==1){
+     Background.addText("You approach "+new Npc(3).name+".");
+     Background.spacer();
+     new Npc(3).interact();
+    } else if (Background.choice==2){
+     return 5;
+    } else if (Background.choice==3){
+     return 7;
+    }
+   } else {
+    Background.addText("What would you like to do?");
+    Background.game.setButton(1,"Look at the water.");
+    Background.game.setButton(2,"Go to "+Location.identifier(5));
+    Background.game.setButton(3,"Go to "+Location.identifier(7));
+    Background.wait(3);
+    if (Background.choice==1){
+     Background.addText("The water beneath the bridge rushes by swiftly.");
+     Background.spacer();
+    } else if (Background.choice==2){
+     return 5;
+    } else if (Background.choice==3){
+     return 7;
+    }
    }
   }
  }
@@ -408,7 +425,21 @@ public class Location{
     }
    } else if (Background.choice==2){
     Background.addText("You just stand there.");
+    if (Background.player.companions[1][0]==0){
+     Background.player.companions[1][0]=1;
+    }
     Background.spacer();
+    if (Background.player.companions[1][0]==1){
+     Background.addText("One of the "+new Companion(1).name+"s walks up to you.");
+     Background.spacer();
+     Background.addQuote("Hello, I've heard talk of you around the village. If you don't mind, I would like to join you in your adventures. Would you allow me to accompany you?");
+     if (Background.yesno()){
+      if (Background.player.addCompanion(1)){
+       Background.addQuote("Thank you "+Background.player.name+"! I will serve you well.");
+       Background.spacer();
+      }
+     }
+    }
    } else if (Background.choice==3){
     return 2;
    }

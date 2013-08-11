@@ -43,6 +43,8 @@ public class Player{
  public boolean stunned = false;
  public int[] quests = new int[25];
  public int[] locations = new int[50];
+ public int[][] companions = new int[25][3];  // companions[which companion][0 unknown,1 available,2 in use;howmuchhealthisleft;howmanybattlesdonewiththeplayer]
+ public Companion[] currentCompanions = new Companion[2];
 
  //for... I don't know if I'll need it actually, so just in case.
  public Player(){
@@ -68,10 +70,12 @@ public class Player{
   dodge = .05;
   //bestiary[0] = 1;
   chest = new Chest();//////////////////////
+  currentCompanions[0]=new Companion(0);
+  currentCompanions[1]=new Companion(0);
  }
 
  //for loading a character
- public Player(String lname, int llevel, int lexperience, int lexperiencetolevel, int lmaxhealth, int lhealth, int lmaxmana, int lmana, int llocation, int lmoney, int lnormaldamage, int lslashdamage, int lstabdamage, int lbashdamage, int lnormalarmor, int lslasharmor, int lstabarmor, int lbasharmor, int lspeed, double laccuracy, double ldodge, Weapon lequippedWeapon, Armor lequippedArmor, Helmet lequippedHelmet, Accessory lequippedAccessory, ArrayList<Weapon> lweapons, ArrayList<Armor> larmor, ArrayList<Helmet> lhelmets, ArrayList<Accessory> laccessories, ArrayList<Item> litems, int[] lbestiary, Chest lchest, int[] lquests, int[] llocations){
+ public Player(String lname, int llevel, int lexperience, int lexperiencetolevel, int lmaxhealth, int lhealth, int lmaxmana, int lmana, int llocation, int lmoney, int lnormaldamage, int lslashdamage, int lstabdamage, int lbashdamage, int lnormalarmor, int lslasharmor, int lstabarmor, int lbasharmor, int lspeed, double laccuracy, double ldodge, Weapon lequippedWeapon, Armor lequippedArmor, Helmet lequippedHelmet, Accessory lequippedAccessory, ArrayList<Weapon> lweapons, ArrayList<Armor> larmor, ArrayList<Helmet> lhelmets, ArrayList<Accessory> laccessories, ArrayList<Item> litems, int[] lbestiary, Chest lchest, int[] lquests, int[] llocations, int[][] lcompanions){
   name = lname;
   level = llevel;
   experience = lexperience;
@@ -106,6 +110,21 @@ public class Player{
   chest = lchest;
   quests = lquests;
   locations = llocations;
+  companions = lcompanions;
+  int number=0;
+  for (int i=0; i<companions.length; i++){
+   if (companions[i][0]==2 && number<2){
+    currentCompanions[number]=new Companion(i);
+    currentCompanions[number].health=companions[i][1];
+    number++;
+   }
+  }
+  if (number==0){
+   currentCompanions[0]=new Companion(0);
+   currentCompanions[1]=new Companion(0);
+  } else if (number==1){
+   currentCompanions[1]=new Companion(0);
+  }
  }
 
  public boolean inventoryContains(int type, int identity, int quantity){
@@ -164,6 +183,102 @@ public class Player{
    output = false;
   }
   return output;
+ }
+
+ public boolean removeThingy(int type, int identity, int quantity){
+  boolean output = true;
+  for (int i=0; i<quantity; i++){
+   if (type==1){
+    try{
+     weapons.remove(new Weapon(identity));
+    } catch(Exception e){
+     System.out.println("player.removeThingy didn't work, says weapon isnt there.");
+     output = false;
+    }
+   } else if (type==2){
+    try{
+     armor.remove(new Armor(identity));
+    } catch(Exception e){
+     System.out.println("player.removeThingy didn't work, says armor isnt there.");
+     output = false;
+    }
+   } else if (type==3){
+    try{
+     items.remove(new Item(identity));
+    } catch(Exception e){
+     System.out.println("player.removeThingy didn't work, says item isnt there.");
+     output = false;
+    }
+   } else if (type==4){
+    try{
+     helmets.remove(new Helmet(identity));
+    } catch(Exception e){
+     System.out.println("player.removeThingy didn't work, says helmet isnt there.");
+     output = false;
+    }
+   } else if (type==5){
+    try{
+     accessories.remove(new Accessory(identity));
+    } catch(Exception e){
+     System.out.println("player.removeThingy didn't work, says accessory isnt there.");
+     output = false;
+    }
+   }
+  }
+  return output;
+ }
+
+ public boolean addCompanion(int type){
+  if (companions[type][0]==0){
+   Background.game.makeMessage("Hey!","You can't have this companion yet, this shouldn't be able to happen.");
+   return false;
+  }
+  int full = 0;
+  int people[] = new int[2];
+  for (int i=0; i<25; i++){
+   if (companions[i][0]==2){
+    people[full] = i;
+    full++;
+   }
+  }
+  if (full>=2){
+   Background.addText("You may only have two companions at a time.");
+   Background.spacer();
+   Background.addText("Which companion would you like replace with "+new Companion(type).name+"?");
+   Background.game.setButton(1,new Companion(people[0]).name);
+   Background.game.setButton(2,new Companion(people[1]).name);
+   Background.game.setButton(3,"Nevermind");
+   Background.wait(3);
+   if (Background.choice==1){
+    companions[people[0]][0]=1;
+    companions[type][0]=2;
+    Background.addText(new Companion(people[0]).name+" returns to where you found them, and "+new Companion(type).name+" joins you.");
+    Background.spacer();
+    return true;
+   } else if (Background.choice==2){
+    companions[people[1]][0]=1;
+    companions[type][0]=2;
+    Background.addText(new Companion(people[1]).name+" returns to where you found them, and "+new Companion(type).name+" joins you.");
+    Background.spacer();
+    return true;
+   } else {
+    Background.addText("You decide not to let "+new Companion(type).name+" accompany you.");
+    Background.spacer();
+    return false;
+   }
+  } else {
+   companions[type][0]=2;
+   if (Background.player.currentCompanions[0].name.equals("none")){
+    Background.player.currentCompanions[0]=new Companion(type);
+   } else if (Background.player.currentCompanions[1].name.equals("none")){
+    Background.player.currentCompanions[1]=new Companion(type);
+   } else {
+    Background.game.makeMessage("Well darn","Something in the Player.addCompanion method failed, your companion has not been added.");
+   }
+   Background.addText(new Companion(type).name+" has joined you.");
+   Background.spacer();
+   return true;
+  }
  }
 
  public double chance(int type){
@@ -241,6 +356,8 @@ public class Player{
   while (true){
    if (experience >= experiencetolevel){
     level++;
+    currentCompanions[0].level++;
+    currentCompanions[1].level++;
     experience = experience-experiencetolevel;
     experiencetolevel = (int)(experiencetolevel*1.3);
     Background.addText("You leveled up to level "+level+" and gained 2 health.");
@@ -326,6 +443,8 @@ public class Player{
  public void rest(){
   health=maxhealth;
   mana=maxmana;
+  currentCompanions[0].health=currentCompanions[0].maxhealth;
+  currentCompanions[1].health=currentCompanions[1].maxhealth;
   Background.addText("You're back to full health.");
   Background.spacer();
  }
@@ -462,6 +581,8 @@ public class Player{
   } else if (type==5){
    added = new Accessory(identity);
   }
+  Background.changePic(type+2,identity);
+  Background.game.update();
   Background.addText("Would you like to put the "+added.name+" in your inventory?");
   if (!Background.yesno()){
    return;
@@ -520,6 +641,8 @@ public class Player{
     }
    }
   }
+  Background.changePic(1,Background.player.location);
+  Background.game.update();
  }
 
  public void save(){
@@ -586,6 +709,10 @@ public class Player{
    writer.write(n+"L");
    for (int i=0; i<locations.length; i++){
     writer.write(n+locations[i]);
+   }
+   writer.write(n+"C");
+   for (int i=0; i<companions.length; i++){
+    writer.write(n+companions[i][0]+n+companions[i][1]+n+companions[i][2]);
    }
    writer.write(n+"D");
    writer.close();

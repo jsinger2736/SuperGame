@@ -184,6 +184,7 @@ public class Weapon extends Thingy{
    description = "With these on you look like a vicious little teddy. Who likes to kill things.";
    info = "Does little slash, and minor normal and stab damage. Has a good chance of causing bleeding, and a very good chance to weaken. Also gives minor protection from normal attacks.";
   } else {
+   System.out.println("Hey. This weapon shouldn't exist. What are you doing with it.");
    setName("weapon"+x);
    normaldamage = 1;
    slashdamage = 2;

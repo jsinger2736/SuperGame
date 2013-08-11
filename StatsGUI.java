@@ -4,10 +4,14 @@ import java.awt.*;
 
 public class StatsGUI extends JFrame{
  private JPanel grid, north;
+ JPanel south;
  JLabel name, level, experience, health, mana, equippedWeapon, equippedArmor, equippedHelmet, equippedAccessory, speed, normaldam, slashdam, stabdam, bashdam, normalarm, slasharm, stabarm, basharm, accuracy, dodge;
+ JButton companions;
+ private ButtonHandler buttonHandler;
 
  public StatsGUI(){
   Container container = getContentPane();
+  buttonHandler = new ButtonHandler();
   
   grid = new JPanel();
   grid.setLayout(new GridLayout(18,2,5,6));
@@ -75,11 +79,31 @@ public class StatsGUI extends JFrame{
   container.add(north, BorderLayout.NORTH);
   container.add(grid, BorderLayout.CENTER);
 
+  companions = new JButton("Companions");
+  companions.addActionListener(buttonHandler);
+  south = new JPanel();
+  south.add(companions);
+  container.add(south, BorderLayout.SOUTH);
+
   setTitle("Stats");
   pack();
   setLocationRelativeTo(null);
   Background.game.update();
   setVisible(true);
+ }
+
+ private class ButtonHandler implements ActionListener{
+  public void actionPerformed(ActionEvent e){
+   Object source = e.getSource();
+   if (source==companions){
+    if (Background.game.companionGUI==null){
+     Background.game.companionGUI = new CompanionGUI();
+    } else {
+     Background.game.companionGUI.setVisible(true);
+    }
+    Background.game.companionGUI.updateCompanionGUI();
+   }
+  }
  }
 
 }

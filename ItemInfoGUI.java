@@ -162,7 +162,8 @@ public class ItemInfoGUI extends JFrame{
   for (int i=0; i<thingyArray.size(); i++){
    dl.addElement(thingyArray.get(i).name);
   }
-  if (!blah){
+  //if (!blah){
+  if (thingyArray.size()==0){
    dl.addElement("none");
   }
   try{
